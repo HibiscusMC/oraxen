@@ -197,29 +197,37 @@ public class CommandsManager {
                         .replaceSuggestions(ArgumentSuggestions.strings("hand", "all")))
                 .executes((sender, args) -> {
                     final Collection<Player> targets = (Collection<Player>) args[0];
+                    final String type = (String) args[1];
 
-                    if ("hand".equals(args[1])) for (final Player player : targets) {
-                        player.getInventory().setItemInMainHand(
-                                ItemUpdater.updateItem(player.getInventory().getItemInMainHand()));
-                        Message.UPDATED_ITEMS.send(sender, AdventureUtils.tagResolver("amount", String.valueOf(1)),
-                                AdventureUtils.tagResolver("player", player.getDisplayName()));
-                    }
-
-                    if (sender.hasPermission("oraxen.command.update.all")) for (final Player player : targets) {
-                        int updated = 0;
-                        for (int i = 0; i < player.getInventory().getSize(); i++) {
-                            final ItemStack oldItem = player.getInventory().getItem(i);
-                            final ItemStack newItem = ItemUpdater.updateItem(oldItem);
-                            if (oldItem == null || oldItem.equals(newItem))
-                                continue;
-                            player.getInventory().setItem(i, newItem);
-                            updated++;
+                    if ("hand".equals(type) && sender.hasPermission("oraxen.command.update")) {
+                        for (final Player player : targets) {
+                            player.getInventory().setItemInMainHand(
+                                    ItemUpdater.updateItem(player.getInventory().getItemInMainHand()));
+                            Message.UPDATED_ITEMS.send(sender, AdventureUtils.tagResolver("amount", String.valueOf(1)),
+                                    AdventureUtils.tagResolver("player", player.getDisplayName()));
                         }
-                        Message.UPDATED_ITEMS.send(sender, AdventureUtils.tagResolver("amount", String.valueOf(updated)),
-                                AdventureUtils.tagResolver("player", player.getDisplayName()));
+                    } else if ("all".equals(type) && sender.hasPermission("oraxen.command.update.all")) {
+                        for (final Player player : targets) {
+                            int updated = 0;
+                            for (int i = 0; i < player.getInventory().getSize(); i++) {
+                                final ItemStack oldItem = player.getInventory().getItem(i);
+                                final ItemStack newItem = ItemUpdater.updateItem(oldItem);
+                                if (oldItem == null || oldItem.equals(newItem))
+                                    continue;
+                                player.getInventory().setItem(i, newItem);
+                                updated++;
+                            }
+                            Message.UPDATED_ITEMS.send(sender, AdventureUtils.tagResolver("amount", String.valueOf(updated)),
+                                    AdventureUtils.tagResolver("player", player.getDisplayName()));
+                        }
+                    } else {
+                        if ("hand".equals(type)) {
+                            Message.NO_PERMISSION.send(sender, AdventureUtils.tagResolver("permission", "oraxen.command.update"));
+                        } else {
+                            Message.NO_PERMISSION.send(sender, AdventureUtils.tagResolver("permission", "oraxen.command.update.all"));
+                        }
                     }
-                    else
-                        Message.NO_PERMISSION.send(sender, AdventureUtils.tagResolver("permission", "oraxen.command.update.all"));
                 });
     }
+
 }
